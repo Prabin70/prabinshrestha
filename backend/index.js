@@ -13,8 +13,11 @@ connectDB();
 // Allow requests only from your frontend
 app.use(
   cors({
-    origin: frontendUrl, // replace with your frontend URL
-    credentials: true, // if you plan to use cookies or authentication
+    origin: [
+      "https://prabinshrestha-theta.vercel.app",
+      "http://localhost:3000",
+    ],
+    credentials: true,
   })
 );
 
