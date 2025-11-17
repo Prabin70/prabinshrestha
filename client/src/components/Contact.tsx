@@ -2,11 +2,12 @@
 
 import React, { useRef, useState } from "react";
 import { Send } from "lucide-react";
-import axios from "axios";
-import { baseUrl } from "@/api/env";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { motion, Variants } from "framer-motion"; // Import motion and Variants
+import { motion, Variants } from "framer-motion";
+import { webThreeForm } from "@/api/env";
+
+const WEB3FORMS_ACCESS_KEY = webThreeForm;
 
 const useMagneticEffect = (ref: React.RefObject<HTMLButtonElement | null>) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -32,7 +33,6 @@ const useMagneticEffect = (ref: React.RefObject<HTMLButtonElement | null>) => {
   return { transform, textTransform, handleMouseMove, handleMouseLeave };
 };
 
-// Framer Motion Variants
 const titleVariants: Variants = {
   hidden: { opacity: 0, y: -20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
@@ -77,31 +77,46 @@ const Contact: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    if (!WEB3FORMS_ACCESS_KEY) {
+      toast.error("Configuration error: Form access key is missing.");
+      setIsLoading(false);
+      return;
+    }
+
+    const formDataWeb3 = new FormData();
+    formDataWeb3.append("access_key", WEB3FORMS_ACCESS_KEY);
+    formDataWeb3.append("name", formData.name);
+    formDataWeb3.append("email", formData.email);
+    formDataWeb3.append("subject", formData.subject);
+    formDataWeb3.append("message", formData.message);
+
     try {
-      const response = await axios.post(`${baseUrl}/contact/create`, {
-        clientName: formData.name,
-        email: formData.email,
-        subject: formData.subject,
-        message: formData.message,
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formDataWeb3,
       });
-      console.log(response.data);
 
-      toast.success("Message sent successfully!");
+      const data = await response.json();
+      console.log(data);
 
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
-      });
-    } catch (error: any) {
+      if (data.success) {
+        toast.success("Message sent successfully!");
+
+        setFormData({
+          name: "",
+          email: "",
+          subject: "",
+          message: "",
+        });
+      } else {
+        const errorMessage =
+          data.message ||
+          "Failed to send message. Please check your form data and try again.";
+        toast.error(errorMessage);
+      }
+    } catch (error) {
       console.error("Error submitting form:", error);
-
-      const errorMessage =
-        error.response?.data?.message ||
-        "Failed to send message. Please check your network and try again.";
-
-      toast.error(errorMessage);
+      toast.error("Network error. Could not connect to the server.");
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +125,7 @@ const Contact: React.FC = () => {
   return (
     <section id="contact" className="py-24 px-4">
       <div className="max-w-4xl mx-auto">
-        <motion.h2 // Apply motion to the title
+        <motion.h2
           variants={titleVariants}
           initial="hidden"
           whileInView="visible"
@@ -119,7 +134,7 @@ const Contact: React.FC = () => {
         >
           Get In Touch
         </motion.h2>
-        <motion.p // Apply motion to the subtitle
+        <motion.p
           variants={subtitleVariants}
           initial="hidden"
           whileInView="visible"
@@ -130,7 +145,7 @@ const Contact: React.FC = () => {
           always open to discussing new ideas and opportunities.
         </motion.p>
 
-        <motion.form // Apply motion to the form
+        <motion.form
           variants={formVariants}
           initial="hidden"
           whileInView="visible"

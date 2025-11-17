@@ -1,4 +1,5 @@
-const baseUrl =
-  process.env.NEXT_PUBLIC_API_URL || "https://prabinshrestha-2154.vercel.app";
+const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
-export { baseUrl };
+const webThreeForm = process.env.WEB3FORMS_ACCESS_KEY;
+
+export { baseUrl, webThreeForm };
